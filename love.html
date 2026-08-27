@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Two Souls, One Universe</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Great+Vibes&family=Montserrat:wght@200;300;400;600&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background: #020108;
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* Screen Overlays */
+    .screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+      transition: opacity 1s ease, transform 1s ease;
+    }
+
+    .hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.95);
+    }
+
+    /* Intro Typography */
+    .intro-text {
+      font-size: 2.2rem;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      font-weight: 300;
+      text-align: center;
+      animation: fadeIn 2s ease-in-out;
+    }
+
+    .intro-text span.pink {
+      color: #ff3377;
+      text-shadow: 0 0 15px rgba(255, 51, 119, 0.8), 0 0 30px rgba(255, 51, 119, 0.5);
+    }
+
+    .really-glow {
+      font-family: 'Great Vibes', cursive;
+      font-size: 4.5rem;
+      color: #ff9cf5;
+      text-shadow: 0 0 20px #ff33aa, 0 0 40px #ff0077, 0 0 60px #c000ff;
+      letter-spacing: 3px;
+      margin-top: 15px;
+      animation: pulseGlow 2s infinite alternate;
+    }
+
+    /* Stage 2 UI */
+    .title-header {
+      position: absolute;
+      top: 15%;
+      text-align: center;
+      font-family: 'Cinzel', serif;
+      font-size: 1.3rem;
+      letter-spacing: 6px;
+      color: rgba(255, 255, 255, 0.7);
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    }
+
+    .instruction {
+      position: absolute;
+      bottom: 12%;
+      font-size: 0.8rem;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.5);
+      animation: blink 2s infinite;
+    }
+
+    /* Modal / Letter Popup */
+    .letter-card {
+      background: rgba(18, 10, 24, 0.85);
+      border: 1px solid rgba(255, 100, 180, 0.3);
+      box-shadow: 0 0 40px rgba(255, 50, 120, 0.25), inset 0 0 20px rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(15px);
+      border-radius: 16px;
+      padding: 40px 35px;
+      max-width: 440px;
+      text-align: center;
+      color: #fce8f3;
+      transform: translateY(20px);
+      transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .letter-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.6rem;
+      font-style: italic;
+      color: #ff99c8;
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px rgba(255, 153, 200, 0.5);
+    }
+
+    .letter-body {
+      font-size: 0.95rem;
+      line-height: 1.8;
+      font-weight: 300;
+      color: #ddd;
+      margin-bottom: 25px;
+    }
+
+    .letter-signature {
+      font-style: italic;
+      font-size: 0.9rem;
+      color: #ffb3d9;
+    }
+
+    @keyframes pulseGlow {
+      0% { transform: scale(1); filter: brightness(1); }
+      100% { transform: scale(1.04); filter: brightness(1.3); }
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.8; }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="universe"></canvas>
+
+  <!-- Step 1: Intro -->
+  <div id="intro-screen" class="screen">
+    <div class="intro-text">Coding isn't <span class="pink">romantic</span>?</div>
+    <div class="really-glow">Really? ✨</div>
+  </div>
+
+  <!-- Step 2: Interactive Drag -->
+  <div id="interactive-screen" class="screen hidden">
+    <div class="title-header">two souls, one universe.</div>
+    <div class="instruction">✦ Drag the souls together ✦</div>
+  </div>
+
+  <!-- Step 3: Final Card -->
+  <div id="letter-screen" class="screen hidden">
+    <div class="letter-card">
+      <div class="letter-title">Dear Love,</div>
+      <p class="letter-body">
+        My love for you grows stronger with every passing second. You are the missing piece of my soul that I finally found. Thank you for being my universe, my everything.
+      </p>
+      <div class="letter-signature">
+        With all my love,<br/>
+        <strong>From Me ♡</strong>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('universe');
+    const ctx = canvas.getContext('2d');
+
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      initSouls();
+    });
+
+    // States & Flow
+    let currentStep = 1;
+    setTimeout(() => {
+      document.getElementById('intro-screen').classList.add('hidden');
+      document.getElementById('interactive-screen').classList.remove('hidden');
+      currentStep = 2;
+    }, 3200);
+
+    // Soul Particle Nodes
+    const soulA = { x: 0, y: 0, targetX: 0, targetY: 0, radius: 24, color: '#ff2d75', isDragging: false, particles: [] };
+    const soulB = { x: 0, y: 0, targetX: 0, targetY: 0, radius: 24, color: '#9b4dff', isDragging: false, particles: [] };
+    let stars = [];
+    let heartSparks = [];
+    let isConnected = false;
+
+    function initSouls() {
+      soulA.x = width * 0.28;
+      soulA.y = height * 0.5;
+      soulB.x = width * 0.72;
+      soulB.y = height * 0.5;
+    }
+    initSouls();
+
+    // Background Twinkle Stars
+    for (let i = 0; i < 120; i++) {
+      stars.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        size: Math.random() * 1.8,
+        alpha: Math.random(),
+        speed: 0.005 + Math.random() * 0.015
+      });
+    }
+
+    // Interactive Dragging
+    let activeSoul = null;
+
+    function getPointerPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x: clientX - rect.left, y: clientY - rect.top };
+    }
+
+    function onPointerDown(e) {
+      if (currentStep !== 2 || isConnected) return;
+      const pos = getPointerPos(e);
+      const distA = Math.hypot(pos.x - soulA.x, pos.y - soulA.y);
+      const distB = Math.hypot(pos.x - soulB.x, pos.y - soulB.y);
+
+      if (distA < 60) activeSoul = soulA;
+      else if (distB < 60) activeSoul = soulB;
+    }
+
+    function onPointerMove(e) {
+      if (!activeSoul) return;
+      const pos = getPointerPos(e);
+      activeSoul.x = pos.x;
+      activeSoul.y = pos.y;
+
+      // Soul Tail Particles
+      for (let i = 0; i < 3; i++) {
+        activeSoul.particles.push({
+          x: activeSoul.x + (Math.random() - 0.5) * 15,
+          y: activeSoul.y + (Math.random() - 0.5) * 15,
+          vx: (Math.random() - 0.5) * 2,
+          vy: (Math.random() - 0.5) * 2,
+          radius: Math.random() * 4 + 2,
+          alpha: 1,
+          color: activeSoul.color
+        });
+      }
+
+      // Check Proximity for Connection
+      const dist = Math.hypot(soulA.x - soulB.x, soulA.y - soulB.y);
+      if (dist < 70 && !isConnected) {
+        triggerConnection();
+      }
+    }
+
+    function onPointerUp() {
+      activeSoul = null;
+    }
+
+    window.addEventListener('mousedown', onPointerDown);
+    window.addEventListener('mousemove', onPointerMove);
+    window.addEventListener('mouseup', onPointerUp);
+    window.addEventListener('touchstart', onPointerDown);
+    window.addEventListener('touchmove', onPointerMove);
+    window.addEventListener('touchend', onPointerUp);
+
+    function triggerConnection() {
+      isConnected = true;
+      activeSoul = null;
+      
+      // Merge to Center
+      const midX = (soulA.x + soulB.x) / 2;
+      const midY = (soulA.y + soulB.y) / 2;
+      soulA.x = midX;
+      soulA.y = midY;
+      soulB.x = midX;
+      soulB.y = midY;
+
+      // Heart Explosion Generation
+      for (let t = 0; t < Math.PI * 2; t += 0.04) {
+        // Parametric Heart Formula
+        const heartX = 16 * Math.pow(Math.sin(t), 3);
+        const heartY = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+        
+        heartSparks.push({
+          x: midX,
+          y: midY,
+          targetX: midX + heartX * 9,
+          targetY: midY + heartY * 9,
+          currentX: midX,
+          currentY: midY,
+          alpha: 1,
+          color: Math.random() > 0.5 ? '#ff2d75' : '#ff9cf5',
+          size: Math.random() * 3 + 2
+        });
+      }
+
+      setTimeout(() => {
+        document.getElementById('interactive-screen').classList.add('hidden');
+        document.getElementById('letter-screen').classList.remove('hidden');
+      }, 1400);
+    }
+
+    // Animation Loop
+    function render() {
+      ctx.fillStyle = 'rgba(2, 1, 8, 0.25)';
+      ctx.fillRect(0, 0, width, height);
+
+      // Render Stars
+      stars.forEach(s => {
+        s.alpha += s.speed;
+        const currentAlpha = Math.abs(Math.sin(s.alpha));
+        ctx.fillStyle = `rgba(255, 255, 255, ${currentAlpha * 0.8})`;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Render Soul Particles & Orbs
+      [soulA, soulB].forEach(soul => {
+        soul.particles.forEach((p, index) => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.alpha -= 0.02;
+          if (p.alpha <= 0) {
+            soul.particles.splice(index, 1);
+          } else {
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = p.alpha;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+          }
+        });
+
+        if (currentStep >= 2 && !isConnected) {
+          // Glow effect
+          const grad = ctx.createRadialGradient(soul.x, soul.y, 2, soul.x, soul.y, 45);
+          grad.addColorStop(0, '#ffffff');
+          grad.addColorStop(0.3, soul.color);
+          grad.addColorStop(1, 'transparent');
+          
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(soul.x, soul.y, 45, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+
+      // Render Heart Spark Effect
+      if (heartSparks.length > 0) {
+        heartSparks.forEach(h => {
+          h.currentX += (h.targetX - h.currentX) * 0.08;
+          h.currentY += (h.targetY - h.currentY) * 0.08;
+          
+          ctx.fillStyle = h.color;
+          ctx.shadowColor = h.color;
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.arc(h.currentX, h.currentY, h.size, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        });
+      }
+
+      requestAnimationFrame(render);
+    }
+
+    render();
+  </script>
+</body>
+</html>
