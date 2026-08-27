@@ -33,8 +33,10 @@ Check out the live interactive preview:
 ## 🛠️ How to Run Locally
 
 1. **Clone the repository:**
-   ```bash
-   git clone [https://github.com/YOUR-USERNAME/two-souls-one-universe.git](https://github.com/YOUR-USERNAME/two-souls-one-universe.git)
+```bash
+git clone [https://github.com/Gracyclub/romantic-coding-webpage.git](https://github.com/Gracyclub/romantic-coding-webpage.git)
+```
+
 2. Navigate to the directory:
  ```bash
 cd two-souls-one-universe
